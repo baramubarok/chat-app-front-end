@@ -185,14 +185,22 @@ export default {
       name: 'Pengawas 1',
       emojiTab: null,
       dataChats: [
-        {
-          receive: [
-            {
-              time: '12.00',
-              chat: ['tes'],
-            },
-          ],
-        },
+        // {
+        //   receive: [
+        //     {
+        //       time: '12.00',
+        //       chat: ['tes'],
+        //     },
+        //   ],
+        // },
+        // {
+        //   sent: [
+        //     {
+        //       time: '12.00',
+        //       chat: ['tes'],
+        //     },
+        //   ],
+        // },
       ],
       dataEmoji: [
         {
@@ -856,8 +864,11 @@ export default {
     },
   },
   mounted() {
-    // this.scrollBottom()
-    console.log(this.$route.query)
+    // this.getChats()
+    this.name = this.$route.query.room
+    setInterval(() => {
+      this.getChats()
+    }, 1000)
   },
   methods: {
     chatHandler(e) {
@@ -876,21 +887,76 @@ export default {
     sendMessage(chats) {
       chats = chats.replace('\n', '<br>')
       if (chats !== '') {
-        const today = new Date()
-        const nowTime = today.getHours() + '.' + today.getMinutes()
-        const data = {
-          sent: [
-            {
-              time: nowTime,
-              status: 'sent',
-              chat: [chats],
-            },
-          ],
+        const url = '/message/send-message'
+        const user = localStorage.getItem('chat_user_id')
+        const p = {
+          room: this.$route.query.id,
+          user: parseInt(user),
+          message: chats,
         }
-        this.dataChats.push(data)
-        setTimeout(this.scrollBottom, 100)
-        this.msg = ''
+        this.$axios.post(url, p).then((response) => {
+          const today = new Date()
+          const nowTime = today.getHours() + '.' + today.getMinutes()
+          const data = {
+            sent: [
+              {
+                time: nowTime,
+                status: 'sent',
+                chat: [chats],
+              },
+            ],
+          }
+          this.dataChats.push(data)
+          setTimeout(this.scrollBottom, 100)
+          this.msg = ''
+        })
       }
+    },
+
+    getChats() {
+      const url = '/message'
+      this.$axios.get(url).then((response) => {
+        const result = response.data
+        const user = localStorage.getItem('chat_user_id')
+        this.dataChats = []
+        result.data.forEach((e) => {
+          if (e.room === parseInt(this.$route.query.id)) {
+            const date = new Date(e.created_at)
+            const hour =
+              date.getHours() > 9 ? date.getHours() : '0' + date.getHours()
+            const minute =
+              date.getMinutes() > 9
+                ? date.getMinutes()
+                : '0' + date.getMinutes()
+
+            if (e.user === parseInt(user)) {
+              const data = {
+                sent: [
+                  {
+                    time: hour + ':' + minute,
+                    status: 'sent',
+                    chat: [e.message],
+                  },
+                ],
+              }
+              this.dataChats.push(data)
+            } else {
+              const data = {
+                receive: [
+                  {
+                    time: hour + ':' + minute,
+                    status: 'sent',
+                    chat: [e.message],
+                  },
+                ],
+              }
+              this.dataChats.push(data)
+            }
+          }
+
+          this.scrollBottom()
+        })
+      })
     },
   },
 }

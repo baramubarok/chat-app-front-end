@@ -24,7 +24,7 @@
                   <!-- Data chat -->
                   <div
                     class="d-flex py-2 border-bottom px-2 justify-space-between pointer"
-                    @click="$router.push('/chat')"
+                    @click="chooseRoom(i)"
                   >
                     <div class="d-flex">
                       <v-img
@@ -64,6 +64,7 @@
                 color="primary"
                 right
                 style="position: absolute; bottom: 16px; right: 16px"
+                @click="$router.push('/create')"
               >
                 <v-icon>mdi-plus</v-icon>
               </v-btn>
@@ -86,14 +87,7 @@ export default {
       msg: '',
       name: 'Chat Apps',
       emojiTab: null,
-      dataChats: [
-        {
-          id: 1,
-          user: 'Chat Room',
-          chat: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type',
-          time: '16:07',
-        },
-      ],
+      dataChats: [],
     }
   },
   computed: {
@@ -102,41 +96,36 @@ export default {
     },
   },
   mounted() {
-    // this.scrollBottom()
-    console.log(this.$route.query)
+    this.getRooms()
   },
   methods: {
-    chatHandler(e) {
-      if (e.keyCode === 13 && !e.shiftKey) {
-        e.preventDefault()
-        this.sendMessage(this.msg)
-      }
+    getRooms() {
+      const url = '/rooms'
+      this.$axios.get(url).then((response) => {
+        const result = response.data
+        this.dataChats = []
+        result.data.forEach((e) => {
+          const date = new Date(e.created_at)
+          const hour =
+            date.getHours() > 9 ? date.getHours() : '0' + date.getHours()
+          const minute =
+            date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()
+          this.dataChats.push({
+            id: e.id,
+            user: e.name,
+            chat: e.name,
+            time: hour + ':' + minute,
+          })
+        })
+      })
     },
-    scrollBottom() {
-      const container = this.$el.querySelector('.ps')
-      container.scrollTop = 1000000000000
-    },
-    addEmoji(emoji) {
-      this.msg += emoji
-    },
-    sendMessage(chats) {
-      chats = chats.replace('\n', '<br>')
-      if (chats !== '') {
-        const today = new Date()
-        const nowTime = today.getHours() + '.' + today.getMinutes()
-        const data = {
-          sent: [
-            {
-              time: nowTime,
-              status: 'sent',
-              chat: [chats],
-            },
-          ],
-        }
-        this.dataChats.push(data)
-        setTimeout(this.scrollBottom, 100)
-        this.msg = ''
-      }
+    chooseRoom(id) {
+      const url =
+        '/chat/?id=' +
+        this.dataChats[id].id +
+        '&room=' +
+        this.dataChats[id].user
+      this.$router.push(url)
     },
   },
 }

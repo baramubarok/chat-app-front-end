@@ -24,22 +24,29 @@
               <v-form class="d-flex h-100 flex-column justify-space-between">
                 <div>
                   <v-text-field
+                    v-model="username"
                     outlined
                     placeholder="Name"
                     hide-details
                     dense
                     class="mb-3 text-14"
                   ></v-text-field>
-                  <v-textarea
+                  <!-- <v-textarea
                     v-model="message"
                     outlined
                     placeholder="Message"
                     class="mb-3 text-14"
                     hide-details
-                  ></v-textarea>
+                  ></v-textarea> -->
                 </div>
                 <div>
-                  <v-btn block class="rounded-8" color="primary">Send</v-btn>
+                  <v-btn
+                    block
+                    class="rounded-8"
+                    color="primary"
+                    @click="submit()"
+                    >Send</v-btn
+                  >
                 </div>
               </v-form>
             </div>
@@ -47,6 +54,9 @@
         </div>
       </div>
     </v-container>
+    <v-snackbar v-model="notif" bottom color="secondarylightgreen black--text">
+      {{ message }}
+    </v-snackbar>
   </div>
 </template>
 
@@ -58,7 +68,10 @@ export default {
     return {
       name: 'Create Chat',
       username: null,
+
       message: null,
+      loadingSubmit: false,
+      notif: false,
     }
   },
   computed: {
@@ -66,42 +79,20 @@ export default {
       return this.dataChats
     },
   },
-  mounted() {
-    // this.scrollBottom()
-    console.log(this.$route.query)
-  },
+  mounted() {},
   methods: {
-    chatHandler(e) {
-      if (e.keyCode === 13 && !e.shiftKey) {
-        e.preventDefault()
-        this.sendMessage(this.msg)
+    submit() {
+      const url = '/rooms'
+      const p = {
+        name: this.username,
       }
-    },
-    scrollBottom() {
-      const container = this.$el.querySelector('.ps')
-      container.scrollTop = 1000000000000
-    },
-    addEmoji(emoji) {
-      this.msg += emoji
-    },
-    sendMessage(chats) {
-      chats = chats.replace('\n', '<br>')
-      if (chats !== '') {
-        const today = new Date()
-        const nowTime = today.getHours() + '.' + today.getMinutes()
-        const data = {
-          sent: [
-            {
-              time: nowTime,
-              status: 'sent',
-              chat: [chats],
-            },
-          ],
-        }
-        this.dataChats.push(data)
-        setTimeout(this.scrollBottom, 100)
-        this.msg = ''
-      }
+      this.loadingSubmit = true
+      this.$axios.post(url, p).then((response) => {
+        this.loadingSubmit = false
+        this.message = 'Successfully created'
+        this.notif = true
+        // this.$router.push('/list')
+      })
     },
   },
 }

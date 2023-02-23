@@ -16,7 +16,7 @@
                 <!-- Data chat -->
                 <div
                   class="d-flex py-2 border-bottom px-2 justify-space-between pointer"
-                  @click="$router.push('/list')"
+                  @click="chooseUser(data.id)"
                 >
                   <div class="d-flex">
                     <v-img
@@ -75,9 +75,22 @@ export default {
     }
   },
   mounted() {
-    // this.scrollBottom()
+    // this.getUser()
   },
-  methods: {},
+  methods: {
+    // getUser() {
+    //   const url = '/users'
+    //   this.$axios.get(url).then((response) => {
+    //     const result = response.data
+
+    //     if (result.data)
+    //   })
+    // },
+    chooseUser(id) {
+      localStorage.setItem('chat_user_id', id)
+      this.$router.push('/list')
+    },
+  },
 }
 </script>
 
